@@ -1,10 +1,11 @@
-import secrets
-
 import boto3
 from botocore.exceptions import ClientError
 from db.db import get_db
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from helper.auth_helper import get_secret_hash
+from middlewares.auth_middleware import (
+    get_current_user as get_current_authenticated_user,
+)
 from models.users import User
 from schemas.auth import ConfirmUserPayload, LoginUserPayload, SignupUserPayload
 from settings import Settings
@@ -163,3 +164,10 @@ def refresh_token(
             status_code=500,
             detail=str(error),
         ) from error
+
+
+@router.get("/me")
+def get_me(
+    current_user=Depends(get_current_authenticated_user),
+):
+    return {"message": "User retrieved successfully", "user": current_user}
