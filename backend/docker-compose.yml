@@ -1,0 +1,36 @@
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streamly_backend
+    ports:
+      - "8001:8000"
+    image: streamly_fastapi_app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/streamly_db
+    volumes:
+      - ./:/app # bind mount
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=streamly_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # named volume
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d streamly_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

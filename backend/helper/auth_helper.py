@@ -1,0 +1,11 @@
+import base64
+import hashlib
+import hmac
+
+
+def get_secret_hash(username: str, client_id: str, client_secret: str):
+    message = username + client_id
+
+    digest = hmac.new(client_secret.encode(), message.encode(), hashlib.sha256).digest()
+
+    return base64.b64encode(digest).decode()
