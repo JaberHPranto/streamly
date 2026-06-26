@@ -38,7 +38,7 @@ After `Transcoder` service uploads all the segments and manifest files (FFmpeg g
 When a client requests a video, the backend should avoid hitting PostgreSQL for every popular video lookup. A small metadata cache can sit in front of the database:
 
 1. The client requests playback metadata from the `Backend API`, usually by `video_id`.
-2. The backend checks `Redis` first for popular video metadata, using an LRU-style eviction policy such as `allkeys-lru` or `volatile-lru`.
+2. The backend checks `Redis`/`Elasticache` first for popular video metadata, using an LRU-style eviction policy such as `allkeys-lru` or `volatile-lru`.
 3. On a cache hit, Redis returns the playback metadata immediately: status, manifest key, playback URL, duration, available qualities, etc.
 4. On a cache miss, the backend queries `PostgreSQL`, which remains the source of truth for video records.
 5. If the video is completed, the backend builds or fetches the manifest URL, stores the metadata in Redis with a TTL, and returns it to the client.
@@ -84,14 +84,7 @@ sequenceDiagram
 - `LRU eviction` naturally keeps popular videos hot while removing older or less frequently requested entries when memory fills up.
 - `CloudFront` moves video delivery closer to users, reducing latency and preventing S3 from serving every manifest/segment request directly.
 - `PostgreSQL` remains the authoritative store, so cache misses and cache invalidation are safe.
-
-#### Cache invalidation rules
-The backend should invalidate or refresh the Redis entry when a video status or playback location changes:
-
-- `in_progress → completed`: write/update the cache with the final manifest URL.
-- `completed → deleted/private`: remove the cache entry immediately.
-- metadata updates such as title/visibility: update Redis or expire the key.
-
+- 
 ![Video Retrieval](https://duf9q5sx7u.ufs.sh/f/va7H6eSeKAuxGgBqEDxQH2IZyGkYh1fKzCglOJa9BecjsA4V)
 
 
