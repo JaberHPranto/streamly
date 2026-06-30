@@ -1,4 +1,1 @@
-transcoder/.env
-consumer/.env
-client/ .env
-backend/.env
+**/.env
